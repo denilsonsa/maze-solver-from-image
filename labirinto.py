@@ -187,20 +187,20 @@ def cut_deadends(map):
     height = len(map)
     width = len(map[0])
 
-    while True:
-        deadends = []
+    deadends = []
 
-        for i in range(width):
-            for j in range(height):
-                if map[j][i].exits == 1:
-                    deadends.append((i,j))
+    for i in range(width):
+        for j in range(height):
+            if map[j][i].exits == 1:
+                deadends.append((i, j))
 
-        if not deadends:
-            break
-
+    while deadends:
         print('Found {0} deadends.'.format(len(deadends)))
 
-        for x,y in deadends:
+        old_deadends = deadends
+        deadends = []
+
+        for x,y in old_deadends:
             cell = map[y][x]
             directions = [
                     ('up', 'down', 0, -1),
@@ -214,7 +214,10 @@ def cut_deadends(map):
                     x2 = x + xdelta
                     y2 = y + ydelta
                     if 0 <= x2 < width and 0 <= y2 < height:
-                        setattr(map[y2][x2], revdir, False)
+                        other_cell = map[y2][x2]
+                        setattr(other_cell, revdir, False)
+                        if other_cell.exits == 1:
+                            deadends.append((x2, y2))
 
         #print(Cell.map_as_unicode(map))
 
