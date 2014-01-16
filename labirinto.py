@@ -129,6 +129,16 @@ class Cell(object):
         '''Returns the number of exits from this cell.'''
         return self.up + self.down + self.left + self.right + self.special
 
+    @exits.setter
+    def exits(self, value):
+        if value != 0:
+            raise NotImplementedError('You can only assign the value zero.')
+        self.up = False
+        self.down = False
+        self.left = False
+        self.right = False
+        self.special = False
+
     @staticmethod
     def map_as_unicode(map):
         '''Receives a list of list of Cells and returns a unicode string.'''
@@ -169,6 +179,44 @@ def build_map_from_image(img):
                 map[j][i].special = True
 
     return map
+
+
+def cut_deadends(map):
+    '''Receives a list of list of Cells, find deadends and remove them.'''
+
+    height = len(map)
+    width = len(map[0])
+
+    while True:
+        deadends = []
+
+        for i in range(width):
+            for j in range(height):
+                if map[j][i].exits == 1:
+                    deadends.append((i,j))
+
+        if not deadends:
+            break
+
+        print('Found {0} deadends.'.format(len(deadends)))
+
+        for x,y in deadends:
+            cell = map[y][x]
+            directions = [
+                    ('up', 'down', 0, -1),
+                    ('down', 'up', 0, +1),
+                    ('left', 'right', -1, 0),
+                    ('right', 'left', +1, 0),
+                    ]
+            for dir, revdir, xdelta, ydelta in directions:
+                if getattr(cell, dir):
+                    setattr(cell, dir, False)
+                    x2 = x + xdelta
+                    y2 = y + ydelta
+                    if 0 <= x2 < width and 0 <= y2 < height:
+                        setattr(map[y2][x2], revdir, False)
+
+        #print(Cell.map_as_unicode(map))
 
 
 def main():
@@ -213,6 +261,22 @@ def main():
     # Building a map of cells from the image pixels.
     map = build_map_from_image(img)
     print(Cell.map_as_unicode(map))
+
+    cut_deadends(map)
+
+    print('Is it over yet?')
+    print(Cell.map_as_unicode(map))
+    print('Now trying to remove the special cells too.')
+
+    for line in map:
+        for cell in line:
+            if cell.special:
+                cell.special = False
+
+    print(Cell.map_as_unicode(map))
+    cut_deadends(map)
+    print(Cell.map_as_unicode(map))
+
 
 if __name__ == '__main__':
     main()
