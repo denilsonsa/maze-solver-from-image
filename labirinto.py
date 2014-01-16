@@ -54,10 +54,10 @@ def find_white_border(img):
     bottom = find_white_lines(data, 0, height,
                               lambda index: (height - 1 - index) * width,
                               lambda index: (height - 1 - index + 1) * width, 1)
-    left    = find_white_lines(data, 0, width,
+    left   = find_white_lines(data, 0, width,
                               lambda index: index,
                               lambda index: index + height * width, width)
-    right   = find_white_lines(data, 0, width,
+    right  = find_white_lines(data, 0, width,
                               lambda index: width - 1 - index,
                               lambda index: width - 1 - index + height * width, width)
 
@@ -76,6 +76,7 @@ def find_walls(img):
     width, height = img.size
 
     # Number of black pixels per each line and column.
+    # Booleans are essentially integers in Python, so I can just sum them up.
     blacks_per_line = [
             sum(pix == (0, 0, 0) for pix in data[i * width:(i + 1) * width])
             for i in range(height)]
@@ -97,6 +98,77 @@ def find_walls(img):
     wall_cols = [i for i, amount in enumerate(blacks_per_col) if amount > threshold]
 
     return wall_rows, wall_cols
+
+
+class Cell(object):
+    def __init__(self, up=True, down=True, left=True, right=True, special=False):
+        # True if we can move up/down/left/right.
+        # Up/down and left/right are redundant, since there are no one-way
+        # passages. However, adding them as attributes makes the code a bit
+        # more readable.
+        self.up = up
+        self.down = down
+        self.left = left
+        self.right = right
+        self.special = special
+
+    def __repr__(self):
+        return 'Cell({up}, {down}, {left}, {right}, {special})'.format(dir(self))
+
+    def __unicode__(self):
+        table = u'░╵╷│╴┘┐┤╶└┌├─┴┬┼▓╹╻┃╸┛┓┫╺┗┏┣━┻┳╋'
+        return table[self.exits_as_number]
+
+    @property
+    def exits_as_number(self):
+        return (self.up << 0 | self.down << 1 | self.left << 2 |
+                self.right << 3 | self.special << 4)
+
+    @property
+    def exits(self):
+        '''Returns the number of exits from this cell.'''
+        return self.up + self.down + self.left + self.right + self.special
+
+    @staticmethod
+    def map_as_unicode(map):
+        '''Receives a list of list of Cells and returns a unicode string.'''
+        return u'\n'.join(
+                u''.join(unicode(cell) for cell in line)
+                for line in map)
+
+
+def build_map_from_image(img):
+    wall_rows, wall_cols = find_walls(img)
+
+    # Measured in cells.
+    width = len(wall_cols) - 1
+    height = len(wall_rows) - 1
+    map = [[Cell() for i in range(width)] for j in range(height)]
+
+    for i in range(width):
+        for j in range(height):
+            x  = wall_cols[i]
+            xn = wall_cols[i+1]
+            y  = wall_rows[j]
+            yn = wall_rows[j+1]
+
+            # Looking at the middle pixel of the wall. If it is black, there is
+            # a wall there.
+            if img.getpixel(((x+xn)//2,y)) == (0, 0, 0):
+                map[j][i].up = False
+            if img.getpixel(((x+xn)//2,yn)) == (0, 0, 0):
+                map[j][i].down = False
+            if img.getpixel((x,(y+yn)//2)) == (0, 0, 0):
+                map[j][i].left = False
+            if img.getpixel((xn,(y+yn)//2)) == (0, 0, 0):
+                map[j][i].right = False
+
+            # Looking at the middle pixel of the cell. If it is red, it is
+            # special.
+            if img.getpixel(((x+xn)//2,(y+yn)//2)) == (255, 0, 0):
+                map[j][i].special = True
+
+    return map
 
 
 def main():
@@ -138,9 +210,9 @@ def main():
     width, height = img.size
     img.save('02-autocropped.png')
 
-    wall_rows, wall_cols = find_walls(img)
-    print(wall_rows)
-    print(wall_cols)
+    # Building a map of cells from the image pixels.
+    map = build_map_from_image(img)
+    print(Cell.map_as_unicode(map))
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
