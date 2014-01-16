@@ -281,7 +281,7 @@ def cut_dead_ends(maze, verboseness=0):
 
     while dead_ends:
         if verboseness == 1:
-            num_dead_ends_over_time.append(len(dead_ends))
+            num_dead_ends_over_time.append(str(len(dead_ends)))
         elif verboseness == 2:
             print('Cutting {0} dead-ends.'.format(len(dead_ends)))
 
@@ -308,7 +308,7 @@ def cut_dead_ends(maze, verboseness=0):
                             dead_ends.append((x2, y2))
 
         if verboseness == 2:
-            print(Cell.maze_as_unicode(maze))
+            print(Cell.maze_as_unicode(maze).encode('utf8'))
 
     if verboseness == 1 and num_dead_ends_over_time:
         print('Cutting dead-ends: {0}'.format(
@@ -342,14 +342,14 @@ def main():
     maze = build_maze_from_image(img)
     if options.verboseness >= 1:
         print('Raw maze:')
-        print(Cell.maze_as_unicode(maze))
+        print(Cell.maze_as_unicode(maze).encode('utf8'))
 
     # Solving the maze.
     cut_dead_ends(maze, options.verboseness - 1)
 
     if options.verboseness >= 0:
         print('Solution:')
-        print(Cell.maze_as_unicode(maze))
+        print(Cell.maze_as_unicode(maze).encode('utf8'))
 
     # Checking for cycles. After removing the special attribute of the cells
     # and running the solver again, all cells should have no exits. Otherwise,
@@ -367,7 +367,7 @@ def main():
         if options.verboseness >= 2:
             print('This maze does not contain cycles.')
     if options.verboseness >= 3:
-        print(Cell.maze_as_unicode(maze))
+        print(Cell.maze_as_unicode(maze).encode('utf8'))
 
 
 if __name__ == '__main__':
