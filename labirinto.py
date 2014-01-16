@@ -188,8 +188,8 @@ class Cell(object):
         self.special = special
 
     def __repr__(self):
-        return 'Cell({up}, {down}, {left}, {right}, {special})'.format(
-            dir(self))
+        return ('Cell({0.up}, {0.down}, {0.left}, {0.right}, '
+                '{0.special})').format(self)
 
     def __unicode__(self):
         table = u'░╵╷│╴┘┐┤╶└┌├─┴┬┼▓╹╻┃╸┛┓┫╺┗┏┣━┻┳╋'
