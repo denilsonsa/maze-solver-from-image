@@ -22,30 +22,54 @@ def pixel_preprocessing(pix):
         return 0
 
 
-def find_white_border(img):
+def find_white_border(data, size):
     '''Finds how large the white border is (for auto-cropping).
+
+    Args:
+    data -- pixel data, as returned by list(Image.getdata())
+    size -- (width, height) tuple
     '''
 
-    width, height = img.size
-    data = img.getdata()
+    def find_white_lines(data, start, length, expr1, expr2, step):
+        '''Internal logic for finding white lines.
 
-    top, bottom, left, right = 0, 0, 0, 0
+        This logic is repeated for all 4 edges of the image.
 
-    # This piece of 4 copy-pasted blocks could be rewritten as a single
-    # function receiving some lambda expressions...
-    while top < height:
-        line = data[(top)*width : (top+1)*width : 1]
-        if all(pix == WHITE for pix in line):
-            top += 1
-        else:
-            break
+        Returns the number of white lines found.
 
-    while bottom < height:
-        line = data[(height-1-bottom)*width : (height-bottom)*width : 1]
-        if all(pix == WHITE for pix in line):
-            bottom += 1
-        else:
-            break
+        Args:
+        data   -- pixel data, as returned by list(Image.getdata())
+        start  -- integer, usually zero
+        length -- number of possible lines (i.e. abort when value is reached)
+        expr1  -- lambda for returning the beginning of the indexed line
+        expr1  -- lambda for returning the end of the indexed line
+        step   -- step for the pixel data slice
+        '''
+        index = start
+        while index < length:
+            line = data[expr1(index):expr2(index):step]
+            if all(pix == (255, 255, 255) for pix in line):
+                index += 1
+            else:
+                break
+        return index
+
+    width, height = size
+
+    top    = find_white_lines(data, 0, height,
+                              lambda index: (index) * width,
+                              lambda index: (index + 1) * width, 1)
+    bottom = find_white_lines(data, 0, height,
+                              lambda index: (height - 1 - index) * width,
+                              lambda index: (height - 1 - index + 1) * width, 1)
+    left    = find_white_lines(data, 0, width,
+                              lambda index: index,
+                              lambda index: index + height * width, width)
+    right   = find_white_lines(data, 0, width,
+                              lambda index: width - 1 - index,
+                              lambda index: width - 1 - index + height * width, width)
+
+    return top, bottom, left, right
 
 
 def main():
@@ -65,6 +89,13 @@ def main():
     # thresholding, and thus reducing the number of colors.
     img = img.point(pixel_preprocessing)
     img.save('preprocessed.png')
+
+    data = list(img.getdata())
+
+    # Auto-cropping the white border.
+    top, bottom, left, right = find_white_border(data, img.size)
+    print('White border detected: top={0} bottom={1} left={2} '
+            'right={3}'.format(top, bottom, left, right))
 
 if __name__ == "__main__":
     main()
