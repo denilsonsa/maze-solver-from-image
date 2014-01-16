@@ -48,18 +48,22 @@ def find_white_border(img):
     data = list(img.getdata())
     width, height = img.size
 
-    top    = find_white_lines(data, 0, height,
-                              lambda index: (index) * width,
-                              lambda index: (index + 1) * width, 1)
-    bottom = find_white_lines(data, 0, height,
-                              lambda index: (height - 1 - index) * width,
-                              lambda index: (height - 1 - index + 1) * width, 1)
-    left   = find_white_lines(data, 0, width,
-                              lambda index: index,
-                              lambda index: index + height * width, width)
-    right  = find_white_lines(data, 0, width,
-                              lambda index: width - 1 - index,
-                              lambda index: width - 1 - index + height * width, width)
+    top = find_white_lines(
+        data, 0, height,
+        lambda index: (index) * width,
+        lambda index: (index + 1) * width, 1)
+    bottom = find_white_lines(
+        data, 0, height,
+        lambda index: (height - 1 - index) * width,
+        lambda index: (height - 1 - index + 1) * width, 1)
+    left = find_white_lines(
+        data, 0, width,
+        lambda index: index,
+        lambda index: index + height * width, width)
+    right = find_white_lines(
+        data, 0, width,
+        lambda index: width - 1 - index,
+        lambda index: width - 1 - index + height * width, width)
 
     return top, bottom, left, right
 
@@ -78,11 +82,11 @@ def find_walls(img):
     # Number of black pixels per each line and column.
     # Booleans are essentially integers in Python, so I can just sum them up.
     blacks_per_line = [
-            sum(pix == (0, 0, 0) for pix in data[i * width:(i + 1) * width])
-            for i in range(height)]
+        sum(pix == (0, 0, 0) for pix in data[i * width:(i + 1) * width])
+        for i in range(height)]
     blacks_per_col = [
-            sum(pix == (0, 0, 0) for pix in data[i:i + height * width:width])
-            for i in range(width)]
+        sum(pix == (0, 0, 0) for pix in data[i:i + height * width:width])
+        for i in range(width)]
 
     # For the proposed input image, non-wall lines have at most 14% black
     # pixels, while wall lines have at least 49%. Thus, the 33% threshold seems
@@ -91,17 +95,20 @@ def find_walls(img):
     # break this logic.
 
     threshold = width/3.0
-    wall_rows = [i for i, amount in enumerate(blacks_per_line) if amount > threshold]
+    wall_rows = [i for i, amount in enumerate(blacks_per_line)
+                 if amount > threshold]
     #wall_rows = [i for i in range(height) if blacks_per_line[i] > threshold]
 
     threshold = height/3.0
-    wall_cols = [i for i, amount in enumerate(blacks_per_col) if amount > threshold]
+    wall_cols = [i for i, amount in enumerate(blacks_per_col)
+                 if amount > threshold]
 
     return wall_rows, wall_cols
 
 
 class Cell(object):
-    def __init__(self, up=True, down=True, left=True, right=True, special=False):
+    def __init__(self, up=True, down=True, left=True, right=True,
+                 special=False):
         # True if we can move up/down/left/right.
         # Up/down and left/right are redundant, since there are no one-way
         # passages. However, adding them as attributes makes the code a bit
@@ -113,7 +120,8 @@ class Cell(object):
         self.special = special
 
     def __repr__(self):
-        return 'Cell({up}, {down}, {left}, {right}, {special})'.format(dir(self))
+        return 'Cell({up}, {down}, {left}, {right}, {special})'.format(
+            dir(self))
 
     def __unicode__(self):
         table = u'░╵╷│╴┘┐┤╶└┌├─┴┬┼▓╹╻┃╸┛┓┫╺┗┏┣━┻┳╋'
@@ -143,8 +151,8 @@ class Cell(object):
     def map_as_unicode(map):
         '''Receives a list of list of Cells and returns a unicode string.'''
         return u'\n'.join(
-                u''.join(unicode(cell) for cell in line)
-                for line in map)
+            u''.join(unicode(cell) for cell in line)
+            for line in map)
 
 
 def build_map_from_image(img):
@@ -157,9 +165,9 @@ def build_map_from_image(img):
 
     for i in range(width):
         for j in range(height):
-            x  = wall_cols[i]
+            x = wall_cols[i]
             xn = wall_cols[i+1]
-            y  = wall_rows[j]
+            y = wall_rows[j]
             yn = wall_rows[j+1]
 
             # Looking at the middle pixel of the wall. If it is black, there is
@@ -204,11 +212,11 @@ def cut_deadends(map):
         for x, y in old_deadends:
             cell = map[y][x]
             directions = [
-                    ('up', 'down', 0, -1),
-                    ('down', 'up', 0, +1),
-                    ('left', 'right', -1, 0),
-                    ('right', 'left', +1, 0),
-                    ]
+                ('up', 'down', 0, -1),
+                ('down', 'up', 0, +1),
+                ('left', 'right', -1, 0),
+                ('right', 'left', +1, 0),
+            ]
             for dir, revdir, xdelta, ydelta in directions:
                 if getattr(cell, dir):
                     setattr(cell, dir, False)
@@ -260,7 +268,7 @@ def main():
     width, height = img.size
     top, bottom, left, right = find_white_border(img)
     print('White border detected: top={0} bottom={1} left={2} '
-            'right={3}'.format(top, bottom, left, right))
+          'right={3}'.format(top, bottom, left, right))
     img = img.crop((left, top, width - right, height - bottom))
     width, height = img.size
     img.save('02-autocropped.png')
