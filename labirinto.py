@@ -164,18 +164,19 @@ def build_map_from_image(img):
 
             # Looking at the middle pixel of the wall. If it is black, there is
             # a wall there.
-            if img.getpixel(((x+xn)//2,y)) == (0, 0, 0):
+            if img.getpixel(((x+xn)//2, y)) == (0, 0, 0):
                 map[j][i].up = False
-            if img.getpixel(((x+xn)//2,yn)) == (0, 0, 0):
+            if img.getpixel(((x+xn)//2, yn)) == (0, 0, 0):
                 map[j][i].down = False
-            if img.getpixel((x,(y+yn)//2)) == (0, 0, 0):
+            if img.getpixel((x, (y+yn)//2)) == (0, 0, 0):
                 map[j][i].left = False
-            if img.getpixel((xn,(y+yn)//2)) == (0, 0, 0):
+            if img.getpixel((xn, (y+yn)//2)) == (0, 0, 0):
                 map[j][i].right = False
 
-            # Looking at the middle pixel of the cell. If it is red, it is
-            # special.
-            if img.getpixel(((x+xn)//2,(y+yn)//2)) == (255, 0, 0):
+            # Looking at the middle pixel of the cell. If it is neither white
+            # nor black, it is special.
+            if img.getpixel(((x+xn)//2, (y+yn)//2)) not in [
+                    (0, 0, 0), (255, 255, 255)]:
                 map[j][i].special = True
 
     return map
@@ -200,7 +201,7 @@ def cut_deadends(map):
         old_deadends = deadends
         deadends = []
 
-        for x,y in old_deadends:
+        for x, y in old_deadends:
             cell = map[y][x]
             directions = [
                     ('up', 'down', 0, -1),
@@ -241,6 +242,9 @@ def main():
     # - Walls are 1 pixel thick.
     # - Each wall is a few pixels away from each other (i.e. each cell is a few
     #   pixels wide).
+    # - A cell is considered special (i.e. the start/finish) if the middle
+    #   pixels are neither white nor black. The color must be saturated enough
+    #   to survive the preprocessing phase. The #FF0000 red is a good choice.
 
     img = Image.open('labirinto.png')
 
