@@ -280,11 +280,6 @@ def cut_dead_ends(maze, verboseness=0):
     num_dead_ends_over_time = []
 
     while dead_ends:
-        if verboseness == 1:
-            num_dead_ends_over_time.append(str(len(dead_ends)))
-        elif verboseness == 2:
-            print('Cutting {0} dead-ends.'.format(len(dead_ends)))
-
         old_dead_ends = dead_ends
         dead_ends = []
 
@@ -307,7 +302,11 @@ def cut_dead_ends(maze, verboseness=0):
                         if other_cell.exits == 1:
                             dead_ends.append((x2, y2))
 
-        if verboseness == 2:
+        if verboseness == 1:
+            num_dead_ends_over_time.append(str(len(old_dead_ends)))
+
+        if verboseness == 2 and len(old_dead_ends) != len(dead_ends):
+            print('Cutting {0} dead-ends.'.format(len(old_dead_ends)))
             print(Cell.maze_as_unicode(maze).encode('utf8'))
 
     if verboseness == 1 and num_dead_ends_over_time:
