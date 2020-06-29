@@ -1,0 +1,1 @@
+Given a rectangular maze as an image, this script will parse the image and solve the maze. It will print the output maze as unicode characters. This script was written as a challenge to solve a maze that was supplied as a PDF file.
